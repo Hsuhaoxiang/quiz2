@@ -40,14 +40,17 @@ typedef union {
 } xs;
 
 static inline bool xs_is_ptr(const xs *x) { return x->is_ptr; }
+
 static inline size_t xs_size(const xs *x)
 {
     return xs_is_ptr(x) ? x->size : 15 - x->space_left;
 }
+
 static inline char *xs_data(const xs *x)
 {
     return xs_is_ptr(x) ? (char *) x->ptr : (char *) x->data;
 }
+
 static inline size_t xs_capacity(const xs *x)
 {
     return xs_is_ptr(x) ? ((size_t) 1 << x->capacity) - 1 : 15;
