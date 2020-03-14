@@ -9,30 +9,30 @@
 
 
 
-typedef struct RefCounted {
-    size_t refCount_;
+typedef struct refcn {
+    size_t cnt;
     char data_[1];
-} refcounted;
+} refcn_t;
 
 static size_t getDataOffset() {
-      return offsetof(refcounted, data_);
+      return offsetof(refcn_t, data_);
 }
 
-static refcounted* fromData(char* p) {
-    return (refcounted*)((void*)(size_t*)((void*) p - getDataOffset()));
+static refcn_t* fromData(char* p) {
+    return (refcn_t*)((void*)(size_t*)((void*) p - getDataOffset()));
 }
 
 static size_t refs(char* p) {
-    return fromData(p)->refCount_;
+    return fromData(p)->cnt;
 }
 
 static void incrementRefs(char* p) {
-    fromData(p)->refCount_+=1;
+    fromData(p)->cnt+=1;
 }
 
 static void decrementRefs(char* p) {
-        refcounted *dis = fromData(p);
-        size_t oldcnt = (dis->refCount_--);
+        refcn_t *dis = fromData(p);
+        size_t oldcnt = (dis->cnt--);
         if (oldcnt == 1) {
             free(dis);
       }
@@ -40,8 +40,8 @@ static void decrementRefs(char* p) {
 
 
 static char *create(const char* data, size_t size) {
-    refcounted *result =malloc(getDataOffset() + (size + 1) * sizeof(char));
-    result->refCount_ = 0;
+    refcn_t *result =malloc(getDataOffset() + (size + 1) * sizeof(char));
+    result->cnt = 0;
     memcpy(result->data_, data, strlen(data)+1);
     return result->data_;
 }
@@ -194,8 +194,6 @@ xs *xs_concat(xs *string, const xs *prefix, const xs *suffix)
 
     char *pre = xs_data(prefix), *suf = xs_data(suffix),
          *data = xs_data(string);
-    printf("concat len:%zu\n",size + pres + sufs);
-    printf("capacity:%ld\n",capacity);
     if (size + pres + sufs <= capacity) {
         memmove(data + pres, data, size);
         memcpy(data, pre, pres);
@@ -210,7 +208,6 @@ xs *xs_concat(xs *string, const xs *prefix, const xs *suffix)
         memcpy(tmpdata + pres + size, suf, sufs + 1);
         xs_free(string);
         *string = tmps;
-        printf("concat string len:%zu\n",string->size );
         string->size = size + pres + sufs;
     }
     return string;
