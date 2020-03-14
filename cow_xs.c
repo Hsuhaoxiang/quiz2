@@ -6,9 +6,6 @@
 #include <stdio.h>
 
 
-
-
-
 typedef struct refcn {
     size_t cnt;
     char data_[1];
@@ -33,7 +30,7 @@ static void incrementRefs(char* p) {
 static void decrementRefs(char* p) {
         refcn_t *dis = fromData(p);
         size_t oldcnt = (dis->cnt--);
-        if (oldcnt == 1) {
+        if (oldcnt == 0) {
             free(dis);
       }
 }
@@ -267,18 +264,34 @@ xs *xs_trim(xs *x, const char *trimset)
 
 
 
-
 int main()
 {
     xs string = *xs_tmp("()string()");
+    printf("[%s] : %2zu\n", xs_data(&string), xs_size(&string));
     xs_trim(&string, ")(");
+    printf("\n\n");
+    printf("trim\n");
     printf("[%s] : %2zu\n", xs_data(&string), xs_size(&string));
     xs prefix = *xs_tmp("^^^^^^^^"), suffix = *xs_tmp("^^^^^^^^");
     xs_concat(&string, &prefix, &suffix);
+    printf("\n\n");
+    printf("string concat\n");
     printf("[%s] : %2zu\n", xs_data(&string), xs_size(&string));
-    printf("before copy string refcount: %ld\n", refs(string.ptr));
+    printf("string refcnt: %ld\n", refs(string.ptr));
+    printf("\n\n");
+    printf("cow_cpy\n");
     xs copystring = *cow_cpy(&xs_literal_empty(), &string);
-    printf("after copy string refcount : %ld\n", refs(string.ptr));
-    printf("copystring refcount : %ld\n", refs(copystring.ptr));
+    printf("string refcnt : %ld\n", refs(string.ptr));
+    printf("copystring's refcnt : %ld\n", refs(copystring.ptr));
+    xs_concat(&copystring, &prefix, &suffix);
+    printf("\n\n");
+    printf("copystring concat\n");
+    printf("string refcnt : %ld\n", refs(string.ptr));
+    printf("copystring's refcnt : %ld\n", refs(copystring.ptr));
+    printf("\n\n");
+    printf("cow_cpy\n");
+    xs copystring2 = *cow_cpy(&xs_literal_empty(), &string);
+    printf("string refcnt : %ld\n", refs(string.ptr));
+    printf("copystring2's refcnt : %ld\n", refs(copystring2.ptr));
     return 0;
 }
